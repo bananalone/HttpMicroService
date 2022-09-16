@@ -121,9 +121,9 @@ if __name__ == '__main__':
     app = Service(app)
     import core
     tab = core.FunctionTable()
-    tab.register(module='test/hello.py', entrypoint='hello').register(module='test/hello.py', entrypoint='hello_json')
-    func_hello = tab.get(module='test/hello.py', entrypoint='hello')
-    func_hello_json = tab.get(module='test/hello.py', entrypoint='hello_json')
+    tab.register(module='examples/hello.py', entrypoint='hello').register(module='examples/hello.py', entrypoint='hello_json')
+    func_hello = tab.get(module='examples/hello.py', entrypoint='hello')
+    func_hello_json = tab.get(module='examples/hello.py', entrypoint='hello_json')
     app.add_rule('hello', func_hello, 'plain')
     app.add_rule('hello_json', func_hello_json, 'json')
     app.run(8080)
