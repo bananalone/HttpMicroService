@@ -14,7 +14,7 @@ class Config:
             raise Exception(f'path: {str(path)} error')
         self._autosave = autosave
 
-    def save(self):
+    def commit(self):
         with open(str(self._path), 'w', encoding='utf-8') as f:
             yaml.dump(self._config, f, allow_unicode=True, sort_keys=False)
 
@@ -31,12 +31,12 @@ class Config:
     def __setitem__(self, key, value):
         self._config[key] = value
         if self._autosave:
-            self.save()
+            self.commit()
 
     def __delitem__(self, key):
         del self._config[key]
         if self._autosave:
-            self.save()
+            self.commit()
 
 
 if __name__ == '__main__':

@@ -1,9 +1,48 @@
 from typing import Any, Callable, Union
+import json
+from string import Template
 
 from flask import Flask, request, Response, make_response
 
+from core import FunctionItem
 
-class RequestParser:
+
+class Service:
+    def __init__(self, app: Flask) -> None:
+        self.flask_app = app
+        self.requestParser = _RequestParser()
+        self.resultParser = _ReturnParser()
+        self.doc_template = Template(DOC_TEMPLATE)
+
+    def run(self, port: int):
+        self.flask_app.run(port = port)
+
+    def add_rule(self, rule: str, func: Callable, response_type: str):
+        view_func = self._service_wrap(func, response_type)
+        self.flask_app.add_url_rule('/' + rule, endpoint=rule, view_func=view_func, methods=['GET', 'POST'])
+
+    def add_rules(self, rules: dict):
+        for rule in rules:
+            self.add_rule(rule, rules[rule]['response_type'])
+
+    def _service_wrap(self, func: FunctionItem, response_type: str):
+        def view_func():
+            parsed_params = {
+                **self.requestParser.parse_get_args(),
+                **self.requestParser.parse_post_urlencoded(),
+                **self.requestParser.parse_post_json()
+            }
+            try:
+                ret = func(**parsed_params)
+                res = self.resultParser.to(ret, response_type)
+            except Exception as e:
+                self.flask_app.logger.error(e)
+                res = self.resultParser.to(self.doc_template.substitute(doc=func.doc), 'plain')
+            return res
+        return view_func
+
+
+class _RequestParser:
     def __init__(self) -> None:
         pass
 
@@ -26,7 +65,7 @@ class RequestParser:
         return params
 
 
-class ReturnParser:
+class _ReturnParser:
     def __init__(self) -> None:
         self.map = dict()
         self.map['plain'] = self.plain
@@ -39,37 +78,52 @@ class ReturnParser:
         return make_response(ret)
 
     def json(self, ret: Union[dict, str]) -> Response:
+        if isinstance(ret, str):
+            ret = json.loads(ret)
         response = make_response(ret)
         response.headers['Content-Type'] = 'application/json'
         return response
 
 
-class Service:
-    def __init__(self, app: Flask) -> None:
-        self.flask_app = app
-        self.requestParser = RequestParser()
-        self.resultParser = ReturnParser()
+DOC_TEMPLATE = '''
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    .center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 80vh;
+    }
 
-    def run(self, port: int):
-        self.flask_app.run(port = port)
+    body {
+        padding: 0;
+        color: green;
+        background-color: black;
+        font-size: 2vw;
+    }
+</style>
+</head>
 
-    def add_rule(self, rule: str, func: Callable, response_type: str):
-        view_func = self._process_request(func, response_type)
-        self.flask_app.add_url_rule('/' + rule, endpoint=rule, view_func=view_func, methods=['GET', 'POST'])
+<body>
+    <div class="center">
+        <pre> ${doc} </pre>
+    </div>
+</body>
+</html>
+'''
 
-    def add_rules(self, rules: dict):
-        for rule in rules:
-            self.add_rule(rule, rules[rule]['cmd'], rules[rule]['args'], rules[rule]['pattern'], rules[rule]['response'])
 
-    def _process_request(self, func: Callable, response_type: str):        
-        def view_func():
-            parsed_params = {
-                **self.requestParser.parse_get_args(),
-                **self.requestParser.parse_post_urlencoded(),
-                **self.requestParser.parse_post_json()
-            }
-            ret = func(**parsed_params)
-            res = self.resultParser.to(ret, response_type)
-            return res
-        return view_func
-
+if __name__ == '__main__':
+    app = Flask(__name__)
+    app = Service(app)
+    import core
+    tab = core.FunctionTable()
+    tab.register(module='test/hello.py', entrypoint='hello').register(module='test/hello.py', entrypoint='hello_json')
+    func_hello = tab.get(module='test/hello.py', entrypoint='hello')
+    func_hello_json = tab.get(module='test/hello.py', entrypoint='hello_json')
+    app.add_rule('hello', func_hello, 'plain')
+    app.add_rule('hello_json', func_hello_json, 'json')
+    app.run(8080)
