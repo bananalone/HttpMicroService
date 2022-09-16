@@ -2,14 +2,14 @@
 from pathlib import Path
 from typing import List, Tuple, Union
 
-from core.item import FunctionItem
+from functionfactory.item import Item
 
-class FunctionTable:
+class Table:
     def __init__(self) -> None:
         self._table = dict()
 
     def register(self, module: str, entrypoint: str):
-        func_item = FunctionItem(module, entrypoint)
+        func_item = Item(module, entrypoint)
         id = self._gen_id(module, entrypoint)
         self._table[id] = func_item
         return self
@@ -38,22 +38,23 @@ class FunctionTable:
 
     def unregister_all(self):
         self._table = dict()
+        return self
 
-    def get(self, module: str, entrypoint: str) -> FunctionItem:
+    def get(self, module: str, entrypoint: str) -> Item:
         id = self._gen_id(module, entrypoint)
         assert id in self._table, f'unregistered function[{id}]'
         return self._table[id]
 
-    def list_in_module(self, module: str) -> List[FunctionItem]:
+    def list_in_module(self, module: str) -> List[Item]:
         func_items = []
         path_module = str(Path(module).absolute())
         for id in self._table:
-            func_item: FunctionItem = self._table[id]
+            func_item: Item = self._table[id]
             if func_item.module == path_module:
                 func_items.append(func_item)
         return func_items
 
-    def list_all(self) -> List[FunctionItem]:
+    def list_all(self) -> List[Item]:
         return list(self._table.values())
 
     def _gen_id(self, module: str, entrypoint: str):

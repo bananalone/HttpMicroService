@@ -4,7 +4,7 @@ from string import Template
 
 from flask import Flask, request, Response, make_response
 
-from core import FunctionItem
+from functionfactory.item import Item
 
 
 class Service:
@@ -25,7 +25,7 @@ class Service:
         for rule in rules:
             self.add_rule(rule, rules[rule]['response_type'])
 
-    def _service_wrap(self, func: FunctionItem, response_type: str):
+    def _service_wrap(self, func: Item, response_type: str):
         def view_func():
             parsed_params = {
                 **self.requestParser.parse_get_args(),
@@ -119,11 +119,11 @@ DOC_TEMPLATE = '''
 if __name__ == '__main__':
     app = Flask(__name__)
     app = Service(app)
-    import core
-    tab = core.FunctionTable()
-    tab.register(module='examples/hello.py', entrypoint='hello').register(module='examples/hello.py', entrypoint='hello_json')
-    func_hello = tab.get(module='examples/hello.py', entrypoint='hello')
-    func_hello_json = tab.get(module='examples/hello.py', entrypoint='hello_json')
+    import functionfactory
+    functionfactory.register(module='examples/hello.py', entrypoint='hello')
+    functionfactory.register(module='examples/hello.py', entrypoint='hello_json')
+    func_hello = functionfactory.get(module='examples/hello.py', entrypoint='hello')
+    func_hello_json = functionfactory.get(module='examples/hello.py', entrypoint='hello_json')
     app.add_rule('hello', func_hello, 'plain')
     app.add_rule('hello_json', func_hello_json, 'json')
     app.run(8080)
