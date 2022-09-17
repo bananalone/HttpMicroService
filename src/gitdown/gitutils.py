@@ -3,10 +3,6 @@ import subprocess
 import sys
 
 
-
-# class 
-
-
 class Downloader:
     def __init__(self, mirror: str = None, depth: int = None) -> None:
         if mirror:

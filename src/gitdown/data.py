@@ -8,8 +8,13 @@ class Package:
     def __init__(self, pkg: str) -> None:
         url = self._parse_url(pkg)
         self._url = url
-        self._owner, self._repository = self._parse_owner_repository(url)
+        self._name = self._parse_name(url)
+        self._owner, self._repository = self._name.split('/')
         self._mirror = re.sub('https?://(www\.)?github.com/', Package.MIRROR, url)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def url(self):
@@ -37,13 +42,14 @@ class Package:
         else:
             raise Exception(f'illegal package[{pkg}]')
 
-    def _parse_owner_repository(self, url: str):
-        m = re.match('^https?://(www\.)?github.com/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/?$', url)
-        return m.group(2), m.group(3)
+    def _parse_name(self, url: str):
+        m = re.match('^https?://(www\.)?github.com/([a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+)/?$', url)
+        return m.group(2)
 
 
 if __name__ == '__main__':
-    p = Package('https://github.com//bananalone/HttpMicroService')
+    p = Package('https://github.com/bananalone/HttpMicroService/')
+    print(p.name)
     print(p.url)
     print(p.mirror)
     print(p.owner)

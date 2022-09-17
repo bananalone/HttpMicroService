@@ -15,3 +15,6 @@ def reinstall(url: str):
 
 def remove(url: str):
     pass
+
+def remove_all():
+    pass
