@@ -33,8 +33,8 @@ class Item:
         module_name = path_module.stem
         module_root = path_module.parent
         assert not (module_root / '__init__.py').exists(), f'can not import submodule[{str(path_module)}]'
-        if str(module_root.absolute()) not in sys.path and str(module_root.relative_to(Path.cwd())) not in sys.path:
-            sys.path.insert(0, str(module_root))
+        if str(module_root.absolute()) not in sys.path:
+            sys.path.insert(0, str(module_root.absolute()))
         loaded_module = importlib.import_module(module_name)
         return loaded_module
         

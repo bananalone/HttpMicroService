@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union
+from typing import Any, Callable
 import json
 from string import Template
 
@@ -20,10 +20,6 @@ class Service:
     def add_rule(self, rule: str, func: Callable, response_type: str):
         view_func = self._service_wrap(func, response_type)
         self.flask_app.add_url_rule('/' + rule, endpoint=rule, view_func=view_func, methods=['GET', 'POST'])
-
-    def add_rules(self, rules: dict):
-        for rule in rules:
-            self.add_rule(rule, rules[rule]['response_type'])
 
     def _service_wrap(self, func: Item, response_type: str):
         def view_func():
@@ -77,7 +73,7 @@ class _ReturnParser:
     def plain(self, ret: str) -> Response:
         return make_response(ret)
 
-    def json(self, ret: Union[dict, str]) -> Response:
+    def json(self, ret: dict | str) -> Response:
         if isinstance(ret, str):
             ret = json.loads(ret)
         response = make_response(ret)

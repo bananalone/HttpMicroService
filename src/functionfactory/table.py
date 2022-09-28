@@ -40,10 +40,9 @@ class Table:
         self._table = dict()
         return self
 
-    def get(self, module: str, entrypoint: str) -> Item:
+    def get(self, module: str, entrypoint: str) -> Item | None:
         id = self._gen_id(module, entrypoint)
-        assert id in self._table, f'unregistered function[{id}]'
-        return self._table[id]
+        return self._table.get(id, None)
 
     def list_in_module(self, module: str) -> List[Item]:
         func_items = []

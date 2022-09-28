@@ -54,7 +54,7 @@ class Table:
             del self._cache[name]
             raise e
 
-    def get(self, name: str):
+    def get(self, name: str) -> str | None:
         if name in self._cache:
             return self._cache[name]
         with sqlite3.connect(self._db) as conn:
